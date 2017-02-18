@@ -9,10 +9,10 @@ int main (void){
 
 SystemInit();
 	
-RCC->APB2ENR = RCC_APB2ENR_IOPCEN;
+
 GPIOC->CRH=0x00;
 GPIOC->CRH|=1<<20;
-	I2C3_init();
+	I2C1_init();
 
 	
 	uint16_t i;
@@ -52,17 +52,10 @@ void I2C3_WriteChar (char Adr, char Dat)    {
 
 void I2C3_init(void) {
 	
-	  ///* Initialize I2C3, SDA: PC9, SCL: PA8 */
-  
-RCC->AHB1ENR  |= 0x05;  // Enable clock for GPIOC and GPIOA
-GPIOA->MODER  |= 1<<17;  // PA8 AF mode
-GPIOC->MODER  |= 1<<19;  // PC9 AF mode
-GPIOA->AFR[1] |= 1<<2;  // select AF4 (I2C3 SCL) for PA8 
-GPIOC->AFR[1] |= 1<<6;  // select AF4 (I2C3 SDA) for PC9
-//GPIOA->PUPDR  |= 0x05000;
-//GPIOC->PUPDR  |= 0x05000;
-GPIOA->OTYPER  |= 1<<8;
-GPIOC->OTYPER |= 1<<9;
+	  ///* Initialize I2C1, SDA: PB7, SCL: PB6 */
+RCC->APB2ENR |= RCC_APB2ENR_IOPBEN|RCC_APB2ENR_AFIOEN;
+GPIOB->CRL=0x00;
+
 	
   // initialize I2C block 
   RCC->APB1ENR  |= 1<<23;       // Enable clock for I2C3 
