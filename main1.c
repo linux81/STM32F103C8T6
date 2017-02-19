@@ -236,21 +236,20 @@ static const char ASCII[][5] = {
 int main (void){
 
 SystemInit();
-	
-	RCC->APB1ENR  |= 0x4000;  // Enable clock for SPI2
-  SPI2->CR1 |= 0x33c;      // SSM
-
-	
-  SPI2->CR1    |= 0x040;      // SPI2 ENABLE
+RCC->APB2ENR = RCC_APB2ENR_IOPBEN|RCC_APB2ENR_AFIOEN;  // Enable clock for GPIOB
+GPIOB->CRL=0xDD444444;
+RCC->APB1ENR  |= 0x4000;  // Enable clock for SPI2
+SPI2->CR1 |= 0x33c;      // SSM
+SPI2->CR1    |= 0x040;      // SPI2 ENABLE
 
 Delay(10);
 	
-		GPIOB->BSRRH |=0x080; // PB7 reset LCD
+GPIOB->BSRRH |=0x080; // PB7 reset LCD
 		
 	
 Delay(500);
 
-	  GPIOB->BSRRL |= 0x080;
+GPIOB->BSRRL |= 0x080;
 
 slaveSelect_ctrl(deselect);
 
