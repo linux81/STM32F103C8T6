@@ -11,18 +11,24 @@ void gotoXY(uint16_t x,uint16_t y);
 void LCDCharacter(char character);
 void LCDString(char *characters);
 
-
+// SCLK PA5 
+// MOSI PA7 
+// D/C PA0 
+// RST PA1 
+// SCE PA2 
 
 
 
 
 void slaveSelect_ctrl(_Bool state){
+	// PA2 CS
+	
 if(state){
-GPIOB->BSRRH |= 0x01;
+GPIOA->BSRR |= 1<<18;
 }
 else{
-while(SPI2->SR& SPI_SR_BSY);
-GPIOB->BSRRL |= 0x01;
+while(SPI1->SR& SPI_SR_BSY);
+GPIOA->BSRR |= 1<<2;
 }
 };
 
@@ -236,20 +242,20 @@ static const char ASCII[][5] = {
 int main (void){
 
 SystemInit();
-RCC->APB2ENR = RCC_APB2ENR_IOPBEN|RCC_APB2ENR_AFIOEN;  // Enable clock for GPIOB
-GPIOB->CRL=0xDD444444;
-RCC->APB1ENR  |= 0x4000;  // Enable clock for SPI2
-SPI2->CR1 |= 0x33c;      // SSM
-SPI2->CR1    |= 0x040;      // SPI2 ENABLE
+RCC->APB2ENR = RCC_APB2ENR_IOPAEN|RCC_APB2ENR_AFIOEN;  // Enable clock for GPIOB
+GPIOA->CRL =0x94944111;
+RCC->APB2ENR  |= 1<<12;  // Enable clock for SPI2
+SPI1->CR1 |= 0x334;      // SSM 0x33c
+SPI1->CR1    |= 0x040;      // SPI2 ENABLE
 
 Delay(10);
 	
-GPIOB->BSRRH |=0x080; // PB7 reset LCD
+GPIOA->BSRR |=1<<17; // PA1 reset LCD
 		
 	
 Delay(500);
 
-GPIOB->BSRRL |= 0x080;
+GPIOA->BSRR |= 1<<1;
 
 slaveSelect_ctrl(deselect);
 
@@ -267,46 +273,33 @@ slaveSelect_ctrl(deselect);
 
 while(1){
 	
-	LCDString("terenia jest psotna");
-	
-	Delay(10000);
-	
-	send_cmd(0x0d);
-	
-	
-	Delay(10000);
-	
-	
-	send_cmd(0x0c);
-	LCDClear();
-	
-	Delay(1000);
+
 	LCDBitmap(awesome);
 	
-	Delay(10000);
+	Delay(1000);
 	
 	send_cmd(0x0d);
 	
-	Delay(10000);
+	Delay(1000);
 	
 	send_cmd(0x0c);
 	
 	LCDClear();
 	
 	LCDBitmap(SFEFlame);
-		Delay(10000);
+		Delay(1000);
 	
 	send_cmd(0x0d);
-	Delay(10000);
+	Delay(1000);
 	
 	send_cmd(0x0c);
 	
 	LCDClear();
 	LCDBitmap(SFEFlameBubble);
 	
-	Delay(10000);
+	Delay(1000);
 		send_cmd(0x0d);
-	Delay(10000);
+	Delay(1000);
 	LCDClear();
 	}	
 
@@ -319,14 +312,14 @@ uint16_t Data;
 	
 slaveSelect_ctrl(select); // SCE LOW
 	
-GPIOB->BSRRH |= 0x02; // COMMAND MODE
+GPIOA->BSRR |= 1<<16; // COMMAND MODE PA0
 
 //Delay(1);
 
-	while (!(SPI2->SR & SPI_SR_TXE));	//Wait if TXE cleared, Tx FIFO is full.
-	SPI2->DR = number1;
-	while (!(SPI2->SR & SPI_SR_RXNE));	//Wait if RNE cleared, Rx FIFO is empty.
-	Data = SPI2->DR;
+	while (!(SPI1->SR & SPI_SR_TXE));	//Wait if TXE cleared, Tx FIFO is full.
+	SPI1->DR = number1;
+	while (!(SPI1->SR & SPI_SR_RXNE));	//Wait if RNE cleared, Rx FIFO is empty.
+	Data = SPI1->DR;
 //Delay(1);
 slaveSelect_ctrl(deselect); // SCE HIGH
 };
@@ -336,14 +329,14 @@ void send_grdata(uint16_t number2){
 	
 slaveSelect_ctrl(select); // SCE LOW
 	
-GPIOB->BSRRL |= 0x02; // GRAPHIC MODE
+GPIOA->BSRR |= 1<<0; // GRAPHIC MODE
 	
 //Delay(1);
 
-	while (!(SPI2->SR & SPI_SR_TXE));	//Wait if TXE cleared, Tx FIFO is full.
-	SPI2->DR = number2;
-	while (!(SPI2->SR & SPI_SR_RXNE));	//Wait if RNE cleared, Rx FIFO is empty.
-	Data = SPI2->DR;
+	while (!(SPI1->SR & SPI_SR_TXE));	//Wait if TXE cleared, Tx FIFO is full.
+	SPI1->DR = number2;
+	while (!(SPI1->SR & SPI_SR_RXNE));	//Wait if RNE cleared, Rx FIFO is empty.
+	Data = SPI1->DR;
 	
 //Delay(1);
 slaveSelect_ctrl(deselect); // SCE HIGH
@@ -390,7 +383,3 @@ void LCDString(char *characters) {
   while (*characters)
     LCDCharacter(*characters++);
 };
-
-
-
-
