@@ -1,0 +1,57 @@
+#include "stm32f10x.h" 
+#include "system.h"
+#include "delay.h"
+
+int main (void){
+
+SystemInit();
+	// PA9 USART1 TX, PA10 USART1 RX, DIODA PC13, PA1 TIM2 CH2
+RCC->APB2ENR |= RCC_APB2ENR_IOPAEN|RCC_APB2ENR_USART1EN |RCC_APB2ENR_IOPCEN|RCC_APB2ENR_AFIOEN;
+RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+USART1->BRR     = 72000000/9600; 
+USART1->CR1    |= USART_CR1_TE | USART_CR1_RE|USART_CR1_UE|USART_CR1_RXNEIE;      // Enable UART for TX, RX
+
+NVIC_EnableIRQ(USART1_IRQn);
+// PA1 
+GPIOA->CRL=GPIO_CRL_MODE1_1|GPIO_CRL_CNF1_1;
+// PA9, PA10
+GPIOA->CRH=GPIO_CRH_MODE9_1|GPIO_CRH_CNF9_1|GPIO_CRH_CNF10_0;
+GPIOC->CRH=GPIO_CRH_MODE13_1;
+	
+  TIM2->PSC = 1;
+  TIM2->ARR =15000;
+	TIM2->CCR2 = 7500; // Compare 1 with 250
+
+
+  TIM2->CCMR1 |= TIM_CCMR1_OC2M; // Toggle output 1 & 2 on compare match
+
+  TIM2->CCER |= TIM_CCER_CC2E;
+  TIM2->CR1 |= TIM_CR1_CEN; // Enable timer
+while(1){
+	GPIOC->BSRR=GPIO_BSRR_BR13;
+	Delay(1000);
+	
+	GPIOC->BSRR=GPIO_BSRR_BS13;
+	Delay(1000);
+
+
+}
+
+
+}
+
+
+void USART1_IRQHandler(void)
+{ if ( USART1->SR & USART_SR_RXNE){
+uint8_t tmp;
+	USART1->SR &= ~USART_SR_RXNE;
+
+	tmp=USART1->DR;
+	
+	if (tmp=='a'){TIM2->CCR2 +=500;};
+	if (TIM2->CCR2==1500){TIM2->CCR2 =500;};
+	if (tmp=='b'){TIM2->CCR2 -=500;};
+	if (TIM2->CCR2==0){TIM2->CCR2 =15000;};
+	
+};
+};
